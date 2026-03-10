@@ -20,9 +20,8 @@ const addOrderItems = asyncHandler(async (req, res) => {
     throw new Error('No order items');
     return;
   } else {
-    // Treat Stripe paymentMethodId from frontend as a successful payment
-    const hasStripePayment =
-      paymentMethod === 'Stripe' && req.body.paymentMethodId;
+    // Mark as paid when payment method is Stripe (user completed card checkout)
+    const markPaid = paymentMethod === 'Stripe';
 
     const order = new Order({
       orderItems,
@@ -33,11 +32,11 @@ const addOrderItems = asyncHandler(async (req, res) => {
       taxPrice,
       shippingPrice,
       totalPrice,
-      ...(hasStripePayment && {
+      ...(markPaid && {
         isPaid: true,
-        paidAt: Date.now(),
+        paidAt: new Date(),
         paymentResult: {
-          id: req.body.paymentMethodId,
+          id: req.body.paymentMethodId || 'stripe_checkout',
           status: 'succeeded',
         },
       }),
