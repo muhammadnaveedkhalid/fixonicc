@@ -238,6 +238,7 @@ export const DataProvider = ({ children }) => {
   const updateUser = async (updatedUser) => {
     try {
       const token = getToken();
+      if (!token) return { success: false, message: 'Please sign in again.' };
       const response = await fetch(`${API_URL}/auth/users/${updatedUser._id}`, {
         method: "PUT",
         headers: {
@@ -247,14 +248,15 @@ export const DataProvider = ({ children }) => {
         body: JSON.stringify(updatedUser),
       });
 
+      const data = await response.json().catch(() => ({}));
       if (response.ok) {
-        const data = await response.json();
-        setUsers(users.map((u) => (u._id === data._id ? data : u)));
+        setUsers((prev) => prev.map((u) => (u._id === data._id ? { ...u, ...data } : u)));
         return { success: true };
       }
+      return { success: false, message: data.message || `Update failed (${response.status})` };
     } catch (error) {
       console.error("Error updating user:", error);
-      return { success: false, message: error.message };
+      return { success: false, message: error.message || 'Network error' };
     }
   };
 

@@ -20,7 +20,7 @@ router.post('/reset-password', resetPassword);
 router.get('/profile/:id', getUserProfile);
 
 router.route('/users').get(protect, getUsers);
-router.route('/users/:id').put(protect, updateUser);
-router.route('/users/:id').delete(protect, deleteUser);
+router.route('/users/:id').put(protect, admin, updateUser);
+router.route('/users/:id').delete(protect, admin, deleteUser);
 
 export default router;

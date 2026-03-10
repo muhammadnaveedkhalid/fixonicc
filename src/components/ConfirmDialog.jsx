@@ -39,12 +39,14 @@ const ConfirmDialog = ({ isOpen, title, message, onConfirm, onCancel, confirmTex
 
         <div className="grid grid-cols-2 gap-4">
           <button
+            type="button"
             onClick={onCancel}
             className="py-4 px-6 bg-gray-50 text-gray-700 font-black rounded-2xl hover:bg-gray-100 transition-colors uppercase tracking-widest text-xs"
           >
             Cancel
           </button>
           <button
+            type="button"
             onClick={() => onConfirm(inputValue)}
             className={`py-4 px-6 font-black rounded-2xl shadow-xl transition-all uppercase tracking-widest text-xs text-white ${isSuccess
               ? "bg-green-500 shadow-green-500/20 hover:bg-green-600"
