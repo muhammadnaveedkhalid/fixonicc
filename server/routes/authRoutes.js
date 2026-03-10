@@ -15,7 +15,8 @@ router.post('/register', asyncHandler(registerUser));
 router.post('/login', asyncHandler(loginUser));
 // verify OTP without asyncHandler to avoid "next is not a function" on Vercel serverless (app is invoked with req, res only)
 router.post('/verify', verifyOTP);
-router.post('/resend-otp', asyncHandler(resendOTP));
+// resend OTP without asyncHandler to avoid "next is not a function" on Vercel serverless
+router.post('/resend-otp', resendOTP);
 router.post('/forgot-password', asyncHandler(forgotPassword));
 router.post('/reset-password', asyncHandler(resetPassword));
 
