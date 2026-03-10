@@ -13,7 +13,9 @@ const MyOrders = () => {
     const fetchOrders = async () => {
       try {
         const token = user?.token;
-        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/orders/myorders`, {
+        const rawBase = (import.meta.env.VITE_API_BASE_URL ?? (typeof window !== "undefined" ? `${window.location.origin}/api` : "/api")).replace(/\/$/, "");
+        const apiBase = rawBase.endsWith("/api") ? rawBase : `${rawBase}/api`;
+        const res = await fetch(`${apiBase}/orders/myorders`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (res.ok) {

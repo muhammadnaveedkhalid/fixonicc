@@ -52,7 +52,8 @@ const ShippingContent = ({ stripe = null, elements = null }) => {
     saveShippingAddress({ address, city, postalCode, country });
     setProcessing(true);
     try {
-      const apiUrl = import.meta.env.VITE_API_BASE_URL;
+      const rawBase = (import.meta.env.VITE_API_BASE_URL ?? (typeof window !== "undefined" ? `${window.location.origin}/api` : "/api")).replace(/\/$/, "");
+      const apiUrl = rawBase.endsWith("/api") ? rawBase : `${rawBase}/api`;
       const orderData = {
         orderItems: cartItems,
         shippingAddress: { address, city, postalCode, country },
