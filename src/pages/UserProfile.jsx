@@ -16,8 +16,9 @@ const UserProfile = () => {
         const targetId = id || currentUser?._id;
         if (!targetId) return;
 
-        // Determine endpoint based on if viewing self or other
-        let url = `${import.meta.env.VITE_API_BASE_URL}/auth/profile/${targetId}`;
+        const rawBase = (import.meta.env.VITE_API_BASE_URL ?? (typeof window !== "undefined" ? `${window.location.origin}/api` : "/api")).replace(/\/$/, "");
+        const apiBase = rawBase.endsWith("/api") ? rawBase : `${rawBase}/api`;
+        const url = `${apiBase}/auth/profile/${targetId}`;
 
         const res = await fetch(url);
         if (res.ok) {
