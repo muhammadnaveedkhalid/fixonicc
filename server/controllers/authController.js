@@ -270,6 +270,74 @@ export const updateUser = async (req, res) => {
   }
 };
 
+// @desc    Approve vendor (no middleware – auth done here to avoid serverless "next is not a function")
+// @route   POST /api/auth/users/:id/approve
+// @access  Private/Admin
+export const approveVendor = async (req, res) => {
+  try {
+    let token;
+    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+      token = req.headers.authorization.split(' ')[1];
+    }
+    if (!token) return res.status(401).json({ message: 'Not authorized, no token' });
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const adminUser = await User.findById(decoded.id).select('-password');
+    if (!adminUser || adminUser.role !== 'admin') {
+      return res.status(401).json({ message: 'Not authorized as admin' });
+    }
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    user.status = 'active';
+    if (user.rejectionReason) user.rejectionReason = undefined;
+    const updated = await user.save();
+    return res.json({
+      _id: updated._id,
+      name: updated.name,
+      email: updated.email,
+      role: updated.role,
+      status: updated.status,
+    });
+  } catch (error) {
+    if (error.name === 'JsonWebTokenError') return res.status(401).json({ message: 'Not authorized' });
+    console.error(error);
+    return res.status(500).json({ message: error.message || 'Server error' });
+  }
+};
+
+// @desc    Reject vendor (no middleware – auth done here)
+// @route   POST /api/auth/users/:id/reject
+// @access  Private/Admin
+export const rejectVendor = async (req, res) => {
+  try {
+    let token;
+    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+      token = req.headers.authorization.split(' ')[1];
+    }
+    if (!token) return res.status(401).json({ message: 'Not authorized, no token' });
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const adminUser = await User.findById(decoded.id).select('-password');
+    if (!adminUser || adminUser.role !== 'admin') {
+      return res.status(401).json({ message: 'Not authorized as admin' });
+    }
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    user.status = 'rejected';
+    if (req.body.rejectionReason) user.rejectionReason = req.body.rejectionReason;
+    const updated = await user.save();
+    return res.json({
+      _id: updated._id,
+      name: updated.name,
+      email: updated.email,
+      role: updated.role,
+      status: updated.status,
+    });
+  } catch (error) {
+    if (error.name === 'JsonWebTokenError') return res.status(401).json({ message: 'Not authorized' });
+    console.error(error);
+    return res.status(500).json({ message: error.message || 'Server error' });
+  }
+};
+
 // @desc    Get user profile (public)
 // @route   GET /api/auth/profile/:id
 // @access  Public

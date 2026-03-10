@@ -1,5 +1,7 @@
 import express from 'express';
 import { registerUser, loginUser, getUsers, updateUser, deleteUser,
+  approveVendor,
+  rejectVendor,
   forgotPassword,
   resetPassword,
   getUserProfile,
@@ -26,6 +28,9 @@ router.post('/reset-password', resetPassword);
 router.get('/profile/:id', getUserProfile);
 
 router.route('/users').get(protect, runAsync(getUsers));
+// Dedicated approve/reject (no middleware chain – auth inside handler to avoid serverless "next is not a function")
+router.post('/users/:id/approve', approveVendor);
+router.post('/users/:id/reject', rejectVendor);
 router.route('/users/:id').put(protect, admin, runAsync(updateUser));
 router.route('/users/:id').delete(protect, admin, runAsync(deleteUser));
 

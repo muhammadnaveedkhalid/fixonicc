@@ -280,6 +280,53 @@ export const DataProvider = ({ children }) => {
     }
   };
 
+  const approveVendor = async (id) => {
+    try {
+      const token = getToken();
+      if (!token) return { success: false, message: 'Please sign in again.' };
+      const response = await fetch(`${API_URL}/auth/users/${id}/approve`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await response.json().catch(() => ({}));
+      if (response.ok) {
+        setUsers((prev) => prev.map((u) => (u._id === data._id ? { ...u, ...data } : u)));
+        return { success: true };
+      }
+      return { success: false, message: data.message || `Approve failed (${response.status})` };
+    } catch (error) {
+      console.error('Error approving vendor:', error);
+      return { success: false, message: error.message || 'Network error' };
+    }
+  };
+
+  const rejectVendor = async (id, rejectionReason) => {
+    try {
+      const token = getToken();
+      if (!token) return { success: false, message: 'Please sign in again.' };
+      const response = await fetch(`${API_URL}/auth/users/${id}/reject`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ rejectionReason: rejectionReason || '' }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (response.ok) {
+        setUsers((prev) => prev.map((u) => (u._id === data._id ? { ...u, ...data } : u)));
+        return { success: true };
+      }
+      return { success: false, message: data.message || `Reject failed (${response.status})` };
+    } catch (error) {
+      console.error('Error rejecting vendor:', error);
+      return { success: false, message: error.message || 'Network error' };
+    }
+  };
+
   // Contact Management
   const [contacts, setContacts] = useState([]);
   const [contactMeta, setContactMeta] = useState({ page: 1, pages: 1, total: 0 });
@@ -602,6 +649,8 @@ export const DataProvider = ({ children }) => {
         userMeta,
         updateUser,
         deleteUser,
+        approveVendor,
+        rejectVendor,
         fetchUsers,
         repairs,
         repairMeta,

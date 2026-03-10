@@ -7,7 +7,7 @@ import Modal from '../../components/Modal';
 import Table from '../../components/Table';
 
 const VendorManagement = () => {
-  const { users, userMeta, fetchUsers, updateUser, deleteUser } = useData();
+  const { users, userMeta, fetchUsers, updateUser, deleteUser, approveVendor, rejectVendor } = useData();
   const { showToast } = useToast();
   const { confirm, prompt } = useConfirm();
   const [showUserModal, setShowUserModal] = useState(false);
@@ -61,10 +61,7 @@ const VendorManagement = () => {
       confirmText: 'Approve',
       type: 'success'
     })) {
-      const result = await updateUser({
-        _id: user._id,
-        status: 'active'
-      });
+      const result = await approveVendor(user._id);
       if (result.success) {
         showToast('Vendor approved successfully', 'success');
         fetchUsers({ page: currentPage, search: searchTerm, role: 'vendor' });
@@ -81,12 +78,8 @@ const VendorManagement = () => {
       inputPlaceholder: 'Reason for rejection...'
     });
 
-    if (reason) {
-      const result = await updateUser({
-        _id: id,
-        status: 'rejected',
-        rejectionReason: reason
-      });
+    if (reason !== undefined && reason !== null) {
+      const result = await rejectVendor(id, reason);
       if (result.success) {
         showToast('Request rejected successfully', 'success');
         fetchUsers({ page: currentPage, search: searchTerm, role: 'vendor' });
