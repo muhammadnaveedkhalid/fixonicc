@@ -13,9 +13,10 @@ const orderSchema = mongoose.Schema({
       image: { type: String, required: true },
       price: { type: Number, required: true },
       product: {
-        type: mongoose.Schema.Types.ObjectId,
+        // Store product identifier as string so it works
+        // with both Mongo ObjectId values and mock IDs
+        type: String,
         required: true,
-        ref: 'Accessory',
       },
     },
   ],
