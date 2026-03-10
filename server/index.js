@@ -7,6 +7,7 @@ import http from 'http';
 import path from 'path';
 import connectDB, { ensureDb } from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
+import { approveVendor, rejectVendor } from './controllers/authController.js';
 import contactRoutes from './routes/contactRoutes.js';
 import blogRoutes from './routes/blogRoutes.js';
 import reviewRoutes from './routes/reviewRoutes.js';
@@ -129,6 +130,10 @@ app.use('/api/', async (req, res, next) => {
     res.status(503).json({ message: 'Service temporarily unavailable. Please try again.' });
   }
 });
+
+// Approve/reject vendors – mounted on app so no auth router middleware runs (avoids serverless "next is not a function")
+app.post('/api/auth/users/:id/approve', approveVendor);
+app.post('/api/auth/users/:id/reject', rejectVendor);
 
 app.use('/api/auth', authRoutes);
 app.use('/api/contact', contactRoutes);
