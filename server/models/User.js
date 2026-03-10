@@ -21,6 +21,8 @@ const userSchema = mongoose.Schema({
   emailOtp: { type: String },
   phoneOtp: { type: String },
   otpExpires: { type: Date },
+  emailVerifyToken: { type: String },
+  emailVerifyExpires: { type: Date },
 
   // Location for vendors
   location: {

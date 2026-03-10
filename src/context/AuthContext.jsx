@@ -38,13 +38,6 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem("user", JSON.stringify(data));
         showToast(`Welcome back, ${data.name || 'User'}!`, 'success');
         return { success: true, user: data };
-      } else if (response.status === 403 && (data.requireVerification || data.code === 'VERIFY_EMAIL')) {
-        return {
-          success: false,
-          requireVerification: true,
-          userId: data.userId || data._id,
-          message: data.message || "Please verify your email first.",
-        };
       } else {
         const errorMessage = data.message || "Login failed";
         showToast(errorMessage, 'error');
@@ -97,18 +90,10 @@ export const AuthProvider = ({ children }) => {
       const data = await response.json();
 
       if (response.ok) {
-        if (data.token) {
-          setUser(data);
-          localStorage.setItem("user", JSON.stringify(data));
-          showToast('Account created successfully!', 'success');
-        } else {
-          showToast(data.message || 'Verification code sent to your email.', 'success');
-        }
+        showToast(data.message || 'Please check your email to verify your account.', 'success');
         return {
           success: true,
           message: data.message,
-          userId: data.userId || data._id,
-          requireVerification: data.requireVerification === true || !!data.userId,
         };
       } else {
         const errorMessage = data.message || "Registration failed";

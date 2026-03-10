@@ -20,11 +20,8 @@ const Signup = () => {
     e.preventDefault();
     setError("");
     const result = await signup(formData);
-    if (result.success && (result.requireVerification || result.userId)) {
-      navigate("/verify-otp", { state: { userId: result.userId } });
-      return;
-    }
     if (result.success) {
+      // After signup, user must verify via email link
       navigate("/signin");
       return;
     }

@@ -14,8 +14,8 @@ const generateOTP = () => {
     return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
-// Nice HTML for OTP verification email (matches email-templates/verify-email-otp.html)
-const getVerifyEmailHtml = (otp) => `
+// HTML for email verification link
+const getVerifyEmailLinkHtml = (verifyUrl) => `
 <!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Verify your email – Fixonic</title></head>
@@ -29,11 +29,11 @@ const getVerifyEmailHtml = (otp) => `
 </td></tr>
 <tr><td style="padding:32px 28px;">
 <p style="color:#334155;font-size:16px;line-height:1.6;margin:0 0 20px 0;">Hi there,</p>
-<p style="color:#334155;font-size:16px;line-height:1.6;margin:0 0 24px 0;">Use this code to verify your Fixonic account:</p>
+<p style="color:#334155;font-size:16px;line-height:1.6;margin:0 0 24px 0;">Click the button below to verify your Fixonic account:</p>
 <p style="text-align:center;margin:0 0 24px 0;">
-<span style="display:inline-block;background:#f1f5f9;color:#0A192F;font-weight:700;font-size:28px;letter-spacing:8px;padding:16px 24px;border-radius:14px;border:2px solid #e2e8f0;">${otp}</span>
+  <a href="${verifyUrl}" style="display:inline-block;background:#99FF00;color:#0A192F;font-weight:800;font-size:15px;letter-spacing:0.08em;padding:14px 26px;border-radius:999px;text-decoration:none;text-transform:uppercase;">Verify Email</a>
 </p>
-<p style="color:#64748b;font-size:13px;line-height:1.5;margin:0;">This code expires in 10 minutes. If you didn't request it, you can ignore this email.</p>
+<p style="color:#64748b;font-size:13px;line-height:1.5;margin:0;">If you didn't create a Fixonic account, you can safely ignore this email.</p>
 </td></tr>
 <tr><td style="padding:20px 28px;border-top:1px solid #f1f5f9;">
 <p style="color:#94a3b8;font-size:12px;margin:0;text-align:center;">Fixonic – Device repair & services</p>
@@ -44,7 +44,7 @@ const getVerifyEmailHtml = (otp) => `
 </body>
 </html>`;
 
-// @desc    Register new user
+// @desc    Register new user (email verification via link)
 // @route   POST /api/auth/register
 // @access  Public
 export const registerUser = async (req, res) => {
@@ -55,40 +55,38 @@ export const registerUser = async (req, res) => {
 
     if (userExists) {
       if (!userExists.isEmailVerified) {
-          // Resend OTP if user exists but not verified
-          const emailOtp = generateOTP();
-          const phoneOtp = generateOTP();
-          const otpExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+          // Resend verification link if user exists but not verified
+          const emailVerifyToken = crypto.randomBytes(32).toString('hex');
+          const emailVerifyExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
 
-          userExists.emailOtp = emailOtp;
-          userExists.phoneOtp = phoneOtp;
-          userExists.otpExpires = otpExpires;
+          userExists.emailVerifyToken = emailVerifyToken;
+          userExists.emailVerifyExpires = emailVerifyExpires;
           userExists.name = name;
           userExists.password = password;
           userExists.role = role;
           userExists.phoneNumber = phoneNumber;
           await userExists.save();
 
-          // Send Email OTP
+          const baseUrl = (process.env.FRONTEND_URL || '').replace(/\/$/, '') || 'https://fixonicc.vercel.app';
+          const verifyUrl = `${baseUrl.replace(/\/$/, '')}/verify-email?token=${emailVerifyToken}`;
+
           await sendEmail(
               email,
               'Verify your Email - Fixonic',
-              `Your Email Verification OTP is: ${emailOtp}`,
-              getVerifyEmailHtml(emailOtp)
+              'Click the button below to verify your email.',
+              getVerifyEmailLinkHtml(verifyUrl)
           );
           
           return res.status(200).json({ 
-              message: 'User already exists but not verified. OTP resent.',
-              userId: userExists._id,
+              message: 'User already exists but not verified. Verification link resent to your email.',
               requireVerification: true 
             });
       }
       return res.status(400).json({ message: 'User already exists' });
     }
 
-    const emailOtp = generateOTP();
-    const phoneOtp = generateOTP();
-    const otpExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+    const emailVerifyToken = crypto.randomBytes(32).toString('hex');
+    const emailVerifyExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
 
     const user = await User.create({
       name,
@@ -96,26 +94,26 @@ export const registerUser = async (req, res) => {
       password,
       role,
       phoneNumber,
-      emailOtp,
-      phoneOtp,
-      otpExpires,
       status: role === 'vendor' ? 'pending' : 'active',
       isEmailVerified: false,
-      isPhoneVerified: false
+      isPhoneVerified: false,
+      emailVerifyToken,
+      emailVerifyExpires,
     });
 
     if (user) {
-         // Send Email OTP
-         await sendEmail(
-            email,
-            'Verify your Email - Fixonic',
-            `Your Email Verification OTP is: ${emailOtp}`,
-            getVerifyEmailHtml(emailOtp)
+        const baseUrl = (process.env.FRONTEND_URL || '').replace(/\/$/, '') || 'https://fixonicc.vercel.app';
+        const verifyUrl = `${baseUrl.replace(/\/$/, '')}/verify-email?token=${emailVerifyToken}`;
+
+        await sendEmail(
+          email,
+          'Verify your Email - Fixonic',
+          'Click the button below to verify your email.',
+          getVerifyEmailLinkHtml(verifyUrl)
         );
 
         res.status(201).json({
-           message: 'Registration successful. Please verify your email and phone.',
-           userId: user._id,
+           message: 'Registration successful. Please check your email to verify your account.',
            requireVerification: true
         });
     } else {
@@ -126,99 +124,48 @@ export const registerUser = async (req, res) => {
   }
 };
 
-// @desc    Verify OTP
-// @route   POST /api/auth/verify
+// @desc    Verify email via magic link
+// @route   GET /api/auth/verify-email?token=...
 // @access  Public
-export const verifyOTP = async (req, res, next) => {
+export const verifyEmailLink = async (req, res) => {
     try {
-        const { userId, emailOtp, phoneOtp } = req.body;
-        const user = await User.findById(userId);
+        const { token } = req.query;
+        if (!token) {
+            return res.status(400).json({ message: 'Verification token is required' });
+        }
+
+        const user = await User.findOne({
+          emailVerifyToken: token,
+          emailVerifyExpires: { $gt: Date.now() },
+        });
 
         if (!user) {
-            return res.status(404).json({ message: 'User not found' });
+            return res.status(400).json({ message: 'Invalid or expired verification link' });
         }
 
-        if (user.otpExpires < Date.now()) {
-            return res.status(400).json({ message: 'OTP expired. Please register again.' });
-        }
-
-        let isVerified = false;
-
-        if (emailOtp && user.emailOtp === emailOtp) {
-            user.isEmailVerified = true;
-            user.emailOtp = undefined;
-            isVerified = true;
-        }
-
-        if (phoneOtp && user.phoneOtp === phoneOtp) {
-            user.isPhoneVerified = true;
-            user.phoneOtp = undefined;
-            // Combined verification logic if needed
-        }
-
-        if(isVerified) {
-             user.otpExpires = undefined;
-             await user.save();
-
-             if (user.status === 'pending' && user.role === 'vendor') {
-                 return res.json({
-                    message: 'Verification successful. Account pending admin approval.',
-                    status: 'pending'
-                 });
-             }
-             return res.json({
-                _id: user._id,
-                name: user.name,
-                email: user.email,
-                role: user.role,
-                status: user.status,
-                token: generateToken(user._id),
-             });
-        }
-        return res.status(400).json({ message: 'Invalid OTP' });
-    } catch (error) {
-        res.status(500).json({ message: error.message || 'Server error' });
-    }
-};
-
-// @desc    Resend OTP to unverified user
-// @route   POST /api/auth/resend-otp
-// @access  Public
-export const resendOTP = async (req, res) => {
-    try {
-        const { userId } = req.body;
-        if (!userId) {
-            return res.status(400).json({ message: 'User ID is required' });
-        }
-
-        const user = await User.findById(userId);
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-        if (user.isEmailVerified) {
-            return res.status(400).json({ message: 'Email already verified' });
-        }
-
-        const emailOtp = generateOTP();
-        const phoneOtp = generateOTP();
-        const otpExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
-
-        user.emailOtp = emailOtp;
-        user.phoneOtp = phoneOtp;
-        user.otpExpires = otpExpires;
+        user.isEmailVerified = true;
+        user.emailVerifyToken = undefined;
+        user.emailVerifyExpires = undefined;
         await user.save();
 
-        await sendEmail(
-            user.email,
-            'Verify your Email - Fixonic',
-            `Your Email Verification OTP is: ${emailOtp}`,
-            getVerifyEmailHtml(emailOtp)
-        );
+        if (user.status === 'pending' && user.role === 'vendor') {
+            return res.json({
+                message: 'Email verified successfully. Account pending admin approval.',
+                status: 'pending',
+            });
+        }
 
-        return res.status(200).json({ message: 'Verification code sent again to your email.' });
+        return res.json({
+            message: 'Email verified successfully.',
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            status: user.status,
+            token: generateToken(user._id),
+        });
     } catch (error) {
-        console.error('Resend OTP error:', error);
-        return res.status(500).json({ message: error.message || 'Failed to resend code' });
+        return res.status(500).json({ message: error.message || 'Server error' });
     }
 };
 

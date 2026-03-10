@@ -3,8 +3,7 @@ import { registerUser, loginUser, getUsers, updateUser, deleteUser,
   forgotPassword,
   resetPassword,
   getUserProfile,
-  verifyOTP,
-  resendOTP
+  verifyEmailLink
 } from '../controllers/authController.js';
 import { protect, admin } from '../middleware/authMiddleware.js';
 
@@ -14,8 +13,7 @@ const router = express.Router();
 // All controllers already have proper try/catch error handling
 router.post('/register', registerUser);
 router.post('/login', loginUser);
-router.post('/verify', verifyOTP);
-router.post('/resend-otp', resendOTP);
+router.get('/verify-email', verifyEmailLink);
 router.post('/forgot-password', forgotPassword);
 router.post('/reset-password', resetPassword);
 

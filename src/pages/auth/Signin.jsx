@@ -17,8 +17,6 @@ const Signin = () => {
     const result = await login(email, password);
     if (result.success) {
       navigate("/dashboard");
-    } else if (result.requireVerification && result.userId) {
-      navigate("/verify-otp", { state: { userId: result.userId } });
     } else {
       setError(result.message || "Invalid email or password");
     }
