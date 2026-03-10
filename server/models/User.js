@@ -43,13 +43,15 @@ userSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
-// Encrypt password using bcrypt
+// Encrypt password using bcrypt (guard next so it works on Vercel/serverless)
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) {
-    next();
+    if (typeof next === 'function') next();
+    return;
   }
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
+  if (typeof next === 'function') next();
 });
 
 const User = mongoose.model('User', userSchema);
