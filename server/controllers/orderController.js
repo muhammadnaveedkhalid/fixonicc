@@ -44,6 +44,9 @@ const addOrderItems = asyncHandler(async (req, res) => {
         throw new Error(stripeResult.error || 'Payment failed');
       }
     } else if (paymentMethod === 'Stripe' && req.body.paymentMethodId) {
+      if (!process.env.STRIPE_SECRET_KEY) {
+        console.warn('STRIPE_SECRET_KEY not set – order marked paid but no customer/charge created in Stripe. Add STRIPE_SECRET_KEY in backend env to save data to Stripe.');
+      }
       markPaid = true;
       paymentResultPayload = {
         id: req.body.paymentMethodId,
