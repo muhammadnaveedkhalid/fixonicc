@@ -14,6 +14,36 @@ const generateOTP = () => {
     return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
+// Nice HTML for OTP verification email (matches email-templates/verify-email-otp.html)
+const getVerifyEmailHtml = (otp) => `
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Verify your email – Fixonic</title></head>
+<body style="margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif;background:#f1f5f9;">
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f1f5f9;padding:24px 16px;">
+<tr><td align="center">
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:420px;background:#fff;border-radius:24px;overflow:hidden;box-shadow:0 4px 24px rgba(10,25,47,0.08);">
+<tr><td style="background:#0A192F;padding:28px 32px;text-align:center;">
+<span style="display:inline-block;background:#99FF00;color:#0A192F;font-weight:800;font-size:18px;padding:8px 14px;border-radius:12px;">Fixonic</span>
+<p style="color:rgba(255,255,255,0.85);font-size:14px;margin:12px 0 0 0;">Verify your email</p>
+</td></tr>
+<tr><td style="padding:32px 28px;">
+<p style="color:#334155;font-size:16px;line-height:1.6;margin:0 0 20px 0;">Hi there,</p>
+<p style="color:#334155;font-size:16px;line-height:1.6;margin:0 0 24px 0;">Use this code to verify your Fixonic account:</p>
+<p style="text-align:center;margin:0 0 24px 0;">
+<span style="display:inline-block;background:#f1f5f9;color:#0A192F;font-weight:700;font-size:28px;letter-spacing:8px;padding:16px 24px;border-radius:14px;border:2px solid #e2e8f0;">${otp}</span>
+</p>
+<p style="color:#64748b;font-size:13px;line-height:1.5;margin:0;">This code expires in 10 minutes. If you didn't request it, you can ignore this email.</p>
+</td></tr>
+<tr><td style="padding:20px 28px;border-top:1px solid #f1f5f9;">
+<p style="color:#94a3b8;font-size:12px;margin:0;text-align:center;">Fixonic – Device repair & services</p>
+</td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>`;
+
 // @desc    Register new user
 // @route   POST /api/auth/register
 // @access  Public
@@ -44,11 +74,7 @@ export const registerUser = async (req, res) => {
               email,
               'Verify your Email - Fixonic',
               `Your Email Verification OTP is: ${emailOtp}`,
-              `<div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
-                  <h2>Verify Your Email</h2>
-                  <p>Your OTP code is: <strong>${emailOtp}</strong></p>
-                  <p>This code expires in 10 minutes.</p>
-              </div>`
+              getVerifyEmailHtml(emailOtp)
           );
           
           return res.status(200).json({ 
@@ -84,11 +110,7 @@ export const registerUser = async (req, res) => {
             email,
             'Verify your Email - Fixonic',
             `Your Email Verification OTP is: ${emailOtp}`,
-            `<div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
-                <h2>Verify Your Email</h2>
-                <p>Your OTP code is: <strong>${emailOtp}</strong></p>
-                <p>This code expires in 10 minutes.</p>
-            </div>`
+            getVerifyEmailHtml(emailOtp)
         );
 
         res.status(201).json({
@@ -140,7 +162,8 @@ export const verifyOTP = async (req, res) => {
              
              if (user.status === 'pending' && user.role === 'vendor') {
                  res.json({
-                    message: 'Verification successful. Account pending admin approval.'
+                    message: 'Verification successful. Account pending admin approval.',
+                    status: 'pending'
                  });
              } else {
                  res.json({
@@ -192,11 +215,7 @@ export const resendOTP = async (req, res) => {
             user.email,
             'Verify your Email - Fixonic',
             `Your Email Verification OTP is: ${emailOtp}`,
-            `<div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
-                <h2>Verify Your Email</h2>
-                <p>Your OTP code is: <strong>${emailOtp}</strong></p>
-                <p>This code expires in 10 minutes.</p>
-            </div>`
+            getVerifyEmailHtml(emailOtp)
         );
 
         return res.status(200).json({ message: 'Verification code sent again to your email.' });

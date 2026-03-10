@@ -129,6 +129,12 @@ app.get('/', (req, res) => {
   res.send('Backend is running successfully...');
 });
 
+// Global error handler (for asyncHandler and other next(err) calls)
+app.use((err, req, res, next) => {
+  console.error('Error:', err.message || err);
+  res.status(err.status || 500).json({ message: err.message || 'Server error' });
+});
+
 const PORT = process.env.PORT || 5000;
 
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`));

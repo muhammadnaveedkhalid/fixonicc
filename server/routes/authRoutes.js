@@ -1,4 +1,5 @@
 import express from 'express';
+import asyncHandler from 'express-async-handler';
 import { registerUser, loginUser, getUsers, updateUser, deleteUser,
   forgotPassword,
   resetPassword,
@@ -10,14 +11,14 @@ import { protect, admin } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-router.post('/register', registerUser);
-router.post('/login', loginUser);
-router.post('/verify', verifyOTP);
-router.post('/resend-otp', resendOTP);
-router.post('/forgot-password', forgotPassword);
-router.post('/reset-password', resetPassword);
+router.post('/register', asyncHandler(registerUser));
+router.post('/login', asyncHandler(loginUser));
+router.post('/verify', asyncHandler(verifyOTP));
+router.post('/resend-otp', asyncHandler(resendOTP));
+router.post('/forgot-password', asyncHandler(forgotPassword));
+router.post('/reset-password', asyncHandler(resetPassword));
 
-router.get('/profile/:id', getUserProfile);
+router.get('/profile/:id', asyncHandler(getUserProfile));
 
 router.route('/users').get(protect, getUsers);
 router.route('/users/:id').put(protect, updateUser);
