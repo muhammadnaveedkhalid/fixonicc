@@ -90,7 +90,7 @@ export const AuthProvider = ({ children }) => {
       const data = await response.json();
 
       if (response.ok) {
-        showToast(data.message || 'Please check your email to verify your account.', 'success');
+        showToast(data.message || 'You registered successfully. You can sign in now.', 'success');
         return {
           success: true,
           message: data.message,

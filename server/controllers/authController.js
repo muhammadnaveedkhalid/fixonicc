@@ -44,7 +44,7 @@ const getVerifyEmailLinkHtml = (verifyUrl) => `
 </body>
 </html>`;
 
-// @desc    Register new user (email verification via link)
+// @desc    Register new user (no email verification – can login right away)
 // @route   POST /api/auth/register
 // @access  Public
 export const registerUser = async (req, res) => {
@@ -52,41 +52,9 @@ export const registerUser = async (req, res) => {
     const { name, email, password, role, phoneNumber } = req.body;
 
     const userExists = await User.findOne({ email });
-
     if (userExists) {
-      if (!userExists.isEmailVerified) {
-          // Resend verification link if user exists but not verified
-          const emailVerifyToken = crypto.randomBytes(32).toString('hex');
-          const emailVerifyExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
-
-          userExists.emailVerifyToken = emailVerifyToken;
-          userExists.emailVerifyExpires = emailVerifyExpires;
-          userExists.name = name;
-          userExists.password = password;
-          userExists.role = role;
-          userExists.phoneNumber = phoneNumber;
-          await userExists.save();
-
-          const baseUrl = (process.env.FRONTEND_URL || '').replace(/\/$/, '') || 'https://fixonicc.vercel.app';
-          const verifyUrl = `${baseUrl.replace(/\/$/, '')}/verify-email?token=${emailVerifyToken}`;
-
-          await sendEmail(
-              email,
-              'Verify your Email - Fixonic',
-              'Click the button below to verify your email.',
-              getVerifyEmailLinkHtml(verifyUrl)
-          );
-          
-          return res.status(200).json({ 
-              message: 'User already exists but not verified. Verification link resent to your email.',
-              requireVerification: true 
-            });
-      }
       return res.status(400).json({ message: 'User already exists' });
     }
-
-    const emailVerifyToken = crypto.randomBytes(32).toString('hex');
-    const emailVerifyExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
 
     const user = await User.create({
       name,
@@ -95,27 +63,14 @@ export const registerUser = async (req, res) => {
       role,
       phoneNumber,
       status: role === 'vendor' ? 'pending' : 'active',
-      isEmailVerified: false,
+      isEmailVerified: true,
       isPhoneVerified: false,
-      emailVerifyToken,
-      emailVerifyExpires,
     });
 
     if (user) {
-        const baseUrl = (process.env.FRONTEND_URL || '').replace(/\/$/, '') || 'https://fixonicc.vercel.app';
-        const verifyUrl = `${baseUrl.replace(/\/$/, '')}/verify-email?token=${emailVerifyToken}`;
-
-        await sendEmail(
-          email,
-          'Verify your Email - Fixonic',
-          'Click the button below to verify your email.',
-          getVerifyEmailLinkHtml(verifyUrl)
-        );
-
-        res.status(201).json({
-           message: 'Registration successful. Please check your email to verify your account.',
-           requireVerification: true
-        });
+      res.status(201).json({
+        message: 'Registration successful. You can sign in now.',
+      });
     } else {
       res.status(400).json({ message: 'Invalid user data' });
     }
@@ -180,14 +135,6 @@ export const loginUser = async (req, res) => {
     const user = await User.findOne({ email });
 
     if (user && (await user.matchPassword(password))) {
-      if (!user.isEmailVerified) {
-          return res.status(401).json({ 
-              message: 'Email not verified. Please verify your email.',
-              userId: user._id,
-              requireVerification: true
-            });
-      }
-
       if (user.status !== 'active') {
         let message = 'Account is pending approval or inactive.';
         if (user.status === 'rejected') {

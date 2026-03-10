@@ -21,7 +21,6 @@ const Signup = () => {
     setError("");
     const result = await signup(formData);
     if (result.success) {
-      // After signup, user must verify via email link
       navigate("/signin");
       return;
     }
