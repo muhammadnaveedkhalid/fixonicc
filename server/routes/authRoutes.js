@@ -9,8 +9,14 @@ import { protect, admin } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-// Removed asyncHandler from all routes to fix "next is not a function" on Vercel serverless
-// All controllers already have proper try/catch error handling
+// Wrap async controllers so errors are passed to Express error handler and "next" is never called when undefined (Vercel serverless)
+const runAsync = (fn) => (req, res, next) => {
+  Promise.resolve(fn(req, res)).catch((err) => {
+    if (typeof next === 'function') next(err);
+    else res.status(500).json({ message: err.message || 'Server error' });
+  });
+};
+
 router.post('/register', registerUser);
 router.post('/login', loginUser);
 router.get('/verify-email', verifyEmailLink);
@@ -20,7 +26,7 @@ router.post('/reset-password', resetPassword);
 router.get('/profile/:id', getUserProfile);
 
 router.route('/users').get(protect, getUsers);
-router.route('/users/:id').put(protect, admin, updateUser);
-router.route('/users/:id').delete(protect, admin, deleteUser);
+router.route('/users/:id').put(protect, admin, runAsync(updateUser));
+router.route('/users/:id').delete(protect, admin, runAsync(deleteUser));
 
 export default router;
