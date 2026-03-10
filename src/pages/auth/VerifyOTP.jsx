@@ -21,10 +21,9 @@ const VerifyOTP = () => {
 
   useEffect(() => {
     if (!userId) {
-      showToast("Invalid verification session", "error");
-      navigate('/signin');
+      navigate('/signin', { replace: true });
     }
-  }, [userId, navigate, showToast]);
+  }, [userId, navigate]);
 
   const handleChange = (index, value) => {
     if (isNaN(value)) return;

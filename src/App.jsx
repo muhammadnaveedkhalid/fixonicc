@@ -20,6 +20,7 @@ import Signup from "./pages/auth/Signup";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
 import VerifyOTP from "./pages/auth/VerifyOTP";
+import VerifyEmail from "./pages/auth/VerifyEmail";
 import UserProfile from "./pages/UserProfile"; // New
 import Dashboard from "./pages/Dashboard";
 import Accessories from "./pages/Accessories";
@@ -71,6 +72,7 @@ function App() {
                         <Route path="/forgot-password" element={<ForgotPassword />} />
                         <Route path="/reset-password" element={<ResetPassword />} />
                         <Route path="/verify-otp" element={<VerifyOTP />} />
+                        <Route path="/verify-email" element={<VerifyEmail />} />
                       </Route>
 
                       {/* Public Profile Route - works for vendors and users */}
