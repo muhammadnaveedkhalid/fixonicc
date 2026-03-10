@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://fixonicc-api.vercel.app/api/:path*"
+      "destination": "https://fixonicc-o2t4.vercel.app/api/:path*"
     },
     {
       "source": "/(.*)",

@@ -16,9 +16,10 @@ export const AuthProvider = ({ children }) => {
   const [loading] = useState(false);
   const { showToast } = useToast();
 
-  // API URL – fallback to same-origin /api when env is missing (e.g. production without env var)
-  const API_BASE = import.meta.env.VITE_API_BASE_URL ?? (typeof window !== "undefined" ? `${window.location.origin}/api` : "/api");
-  const API_URL = `${API_BASE.replace(/\/$/, "")}/auth`;
+  // API URL – base must end with /api (backend routes are /api/auth/...). Auto-append /api if missing.
+  const rawBase = (import.meta.env.VITE_API_BASE_URL ?? (typeof window !== "undefined" ? `${window.location.origin}/api` : "/api")).replace(/\/$/, "");
+  const API_BASE = rawBase.endsWith("/api") ? rawBase : `${rawBase}/api`;
+  const API_URL = `${API_BASE}/auth`;
 
   const login = async (email, password) => {
     try {
