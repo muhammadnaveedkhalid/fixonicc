@@ -1,9 +1,10 @@
 import express from 'express';
-import { registerUser, loginUser, getUsers, updateUser,  deleteUser,
+import { registerUser, loginUser, getUsers, updateUser, deleteUser,
   forgotPassword,
   resetPassword,
   getUserProfile,
-  verifyOTP
+  verifyOTP,
+  resendOTP
 } from '../controllers/authController.js';
 import { protect, admin } from '../middleware/authMiddleware.js';
 
@@ -11,7 +12,8 @@ const router = express.Router();
 
 router.post('/register', registerUser);
 router.post('/login', loginUser);
-router.post('/verify', verifyOTP); // New Verification Route
+router.post('/verify', verifyOTP);
+router.post('/resend-otp', resendOTP);
 router.post('/forgot-password', forgotPassword);
 router.post('/reset-password', resetPassword);
 

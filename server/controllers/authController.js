@@ -161,7 +161,51 @@ export const verifyOTP = async (req, res) => {
     }
 };
 
-// ... existing code ...
+// @desc    Resend OTP to unverified user
+// @route   POST /api/auth/resend-otp
+// @access  Public
+export const resendOTP = async (req, res) => {
+    try {
+        const { userId } = req.body;
+        if (!userId) {
+            return res.status(400).json({ message: 'User ID is required' });
+        }
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        if (user.isEmailVerified) {
+            return res.status(400).json({ message: 'Email already verified' });
+        }
+
+        const emailOtp = generateOTP();
+        const phoneOtp = generateOTP();
+        const otpExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+
+        user.emailOtp = emailOtp;
+        user.phoneOtp = phoneOtp;
+        user.otpExpires = otpExpires;
+        await user.save();
+
+        await sendEmail(
+            user.email,
+            'Verify your Email - Fixonic',
+            `Your Email Verification OTP is: ${emailOtp}`,
+            `<div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+                <h2>Verify Your Email</h2>
+                <p>Your OTP code is: <strong>${emailOtp}</strong></p>
+                <p>This code expires in 10 minutes.</p>
+            </div>`
+        );
+
+        return res.status(200).json({ message: 'Verification code sent again to your email.' });
+    } catch (error) {
+        console.error('Resend OTP error:', error);
+        return res.status(500).json({ message: error.message || 'Failed to resend code' });
+    }
+};
+
 // @desc    Authenticate a user
 // @route   POST /api/auth/login
 // @access  Public
