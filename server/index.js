@@ -5,7 +5,7 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import http from 'http';
 import path from 'path';
-import connectDB from './config/db.js';
+import connectDB, { ensureDb } from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
 import contactRoutes from './routes/contactRoutes.js';
 import blogRoutes from './routes/blogRoutes.js';
@@ -107,6 +107,17 @@ app.use((req, res, next) => {
 });
 
 app.use(express.json());
+
+// Ensure MongoDB is connected before any API route (fixes serverless cold-start timeout)
+app.use('/api/', async (req, res, next) => {
+  try {
+    await ensureDb();
+    next();
+  } catch (err) {
+    console.error('DB not ready:', err?.message || err);
+    res.status(503).json({ message: 'Service temporarily unavailable. Please try again.' });
+  }
+});
 
 app.use('/api/auth', authRoutes);
 app.use('/api/contact', contactRoutes);
