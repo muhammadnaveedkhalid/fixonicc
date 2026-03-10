@@ -31,7 +31,9 @@ const allowedOrigins = [
   process.env.FRONTEND_URL,
   "http://localhost:5173",
   "https://fixonic.vercel.app",
-  "https://fixonic.vercel.app/",    ///////////////////////////////////////////////////////
+  "https://fixonic.vercel.app/",
+  "https://fixonicc.vercel.app",
+  "https://fixonicc.vercel.app/",
 ].filter(Boolean);
 
 // CORS configuration
