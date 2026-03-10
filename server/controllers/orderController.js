@@ -1,6 +1,7 @@
 import asyncHandler from 'express-async-handler';
 import Order from '../models/Order.js';
 import { sendOrderPlacedEmail } from '../utils/notificationService.js';
+import { createCustomerAndCharge } from '../utils/stripeService.js';
 
 // @desc    Create new order
 // @route   POST /api/orders
@@ -21,8 +22,34 @@ const addOrderItems = asyncHandler(async (req, res) => {
     throw new Error('No order items');
     return;
   } else {
-    // Mark as paid when payment method is Stripe (user completed card checkout)
-    const markPaid = paymentMethod === 'Stripe';
+    let markPaid = false;
+    let paymentResultPayload = {};
+
+    if (paymentMethod === 'Stripe' && process.env.STRIPE_SECRET_KEY && req.body.paymentMethodId) {
+      const stripeResult = await createCustomerAndCharge({
+        paymentMethodId: req.body.paymentMethodId,
+        amount: totalPrice,
+        customerEmail: req.user?.email,
+        customerName: req.user?.name,
+        shippingAddress,
+      });
+      if (stripeResult.success) {
+        markPaid = true;
+        paymentResultPayload = {
+          id: stripeResult.paymentIntentId,
+          status: 'succeeded',
+        };
+      } else {
+        res.status(400);
+        throw new Error(stripeResult.error || 'Payment failed');
+      }
+    } else if (paymentMethod === 'Stripe' && req.body.paymentMethodId) {
+      markPaid = true;
+      paymentResultPayload = {
+        id: req.body.paymentMethodId,
+        status: 'succeeded',
+      };
+    }
 
     const order = new Order({
       orderItems,
@@ -36,10 +63,7 @@ const addOrderItems = asyncHandler(async (req, res) => {
       ...(markPaid && {
         isPaid: true,
         paidAt: new Date(),
-        paymentResult: {
-          id: req.body.paymentMethodId || 'stripe_checkout',
-          status: 'succeeded',
-        },
+        paymentResult: paymentResultPayload,
       }),
     });
 
