@@ -20,6 +20,10 @@ const addOrderItems = asyncHandler(async (req, res) => {
     throw new Error('No order items');
     return;
   } else {
+    // Treat Stripe paymentMethodId from frontend as a successful payment
+    const hasStripePayment =
+      paymentMethod === 'Stripe' && req.body.paymentMethodId;
+
     const order = new Order({
       orderItems,
       user: req.user._id,
@@ -29,6 +33,14 @@ const addOrderItems = asyncHandler(async (req, res) => {
       taxPrice,
       shippingPrice,
       totalPrice,
+      ...(hasStripePayment && {
+        isPaid: true,
+        paidAt: Date.now(),
+        paymentResult: {
+          id: req.body.paymentMethodId,
+          status: 'succeeded',
+        },
+      }),
     });
 
     const createdOrder = await order.save();
