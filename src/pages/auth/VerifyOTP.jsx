@@ -4,8 +4,8 @@ import { useAuth } from "../../context/AuthContextHooks";
 import { useToast } from "../../context/ToastContext";
 import { ShieldCheck, ArrowRight } from "lucide-react";
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
-const API_URL = API_BASE ? `${API_BASE.replace(/\/$/, '')}/auth` : '';
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? (typeof window !== "undefined" ? `${window.location.origin}/api` : "/api");
+const API_URL = `${API_BASE.replace(/\/$/, "")}/auth`;
 
 const VerifyOTP = () => {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);

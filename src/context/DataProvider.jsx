@@ -6,7 +6,7 @@ import {
 } from "../data/mockData";
 import { DataContext } from "./DataContext";
 
-const API_URL = import.meta.env.VITE_API_BASE_URL;
+const API_URL = import.meta.env.VITE_API_BASE_URL ?? (typeof window !== "undefined" ? `${window.location.origin}/api` : "/api");
 
 const getToken = () => {
   const user = localStorage.getItem("user");
