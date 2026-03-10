@@ -129,7 +129,7 @@ export const registerUser = async (req, res) => {
 // @desc    Verify OTP
 // @route   POST /api/auth/verify
 // @access  Public
-export const verifyOTP = async (req, res) => {
+export const verifyOTP = async (req, res, next) => {
     try {
         const { userId, emailOtp, phoneOtp } = req.body;
         const user = await User.findById(userId);
@@ -159,28 +159,25 @@ export const verifyOTP = async (req, res) => {
         if(isVerified) {
              user.otpExpires = undefined;
              await user.save();
-             
+
              if (user.status === 'pending' && user.role === 'vendor') {
-                 res.json({
+                 return res.json({
                     message: 'Verification successful. Account pending admin approval.',
                     status: 'pending'
                  });
-             } else {
-                 res.json({
-                    _id: user._id,
-                    name: user.name,
-                    email: user.email,
-                    role: user.role,
-                    status: user.status,
-                    token: generateToken(user._id),
-                 });
              }
-        } else {
-            res.status(400).json({ message: 'Invalid OTP' });
+             return res.json({
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                status: user.status,
+                token: generateToken(user._id),
+             });
         }
-
+        return res.status(400).json({ message: 'Invalid OTP' });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ message: error.message || 'Server error' });
     }
 };
 
