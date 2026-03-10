@@ -65,7 +65,15 @@ const ShippingContent = ({ stripe = null, elements = null }) => {
       if (paymentMethod === 'Stripe' && stripe && elements && stripePublishableKey) {
         const cardEl = elements.getElement(CardElement);
         if (cardEl) {
-          const { error, paymentMethod: pm } = await stripe.createPaymentMethod({ type: 'card', card: cardEl });
+          const { error, paymentMethod: pm } = await stripe.createPaymentMethod({
+            type: 'card',
+            card: cardEl,
+            billing_details: {
+              address: {
+                postal_code: postalCode || undefined,
+              },
+            },
+          });
           if (error) {
             showToast(error.message || 'Card error', 'error');
             setProcessing(false);
