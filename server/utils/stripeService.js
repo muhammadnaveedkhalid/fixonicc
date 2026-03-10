@@ -71,7 +71,7 @@ export async function createCustomerAndCharge(opts) {
       customer: customer.id,
       payment_method: paymentMethodId,
       confirm: true,
-      automatic_payment_methods: { enabled: false },
+      payment_method_types: ['card'],
       metadata: {
         customer_email: customerEmail,
         customer_name: customerName || '',

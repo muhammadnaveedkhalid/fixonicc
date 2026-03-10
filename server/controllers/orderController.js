@@ -26,6 +26,7 @@ const addOrderItems = asyncHandler(async (req, res) => {
     let paymentResultPayload = {};
 
     if (paymentMethod === 'Stripe' && process.env.STRIPE_SECRET_KEY && req.body.paymentMethodId) {
+      console.log('[Orders] STRIPE_SECRET_KEY present – calling Stripe API to create customer & charge');
       const stripeResult = await createCustomerAndCharge({
         paymentMethodId: req.body.paymentMethodId,
         amount: totalPrice,
@@ -39,13 +40,15 @@ const addOrderItems = asyncHandler(async (req, res) => {
           id: stripeResult.paymentIntentId,
           status: 'succeeded',
         };
+        console.log('[Orders] Stripe charge succeeded, paymentIntentId:', stripeResult.paymentIntentId);
       } else {
+        console.error('[Orders] Stripe charge failed:', stripeResult.error);
         res.status(400);
         throw new Error(stripeResult.error || 'Payment failed');
       }
     } else if (paymentMethod === 'Stripe' && req.body.paymentMethodId) {
       if (!process.env.STRIPE_SECRET_KEY) {
-        console.warn('STRIPE_SECRET_KEY not set – order marked paid but no customer/charge created in Stripe. Add STRIPE_SECRET_KEY in backend env to save data to Stripe.');
+        console.warn('[Orders] STRIPE_SECRET_KEY not set in THIS project. Add it in the BACKEND project env (Vercel: backend app, not frontend), then redeploy.');
       }
       markPaid = true;
       paymentResultPayload = {
