@@ -299,8 +299,11 @@ export const approveVendor = async (req, res) => {
     });
   } catch (error) {
     if (error.name === 'JsonWebTokenError') return res.status(401).json({ message: 'Not authorized' });
-    console.error(error);
-    return res.status(500).json({ message: error.message || 'Server error' });
+    console.error('[approveVendor]', error?.message || error, error?.stack);
+    const msg = error?.message && !/next is not a function/i.test(error.message)
+      ? error.message
+      : 'Vendor approval failed. Check server logs (Vercel → your project → Logs).';
+    return res.status(500).json({ message: msg });
   }
 };
 
@@ -333,8 +336,11 @@ export const rejectVendor = async (req, res) => {
     });
   } catch (error) {
     if (error.name === 'JsonWebTokenError') return res.status(401).json({ message: 'Not authorized' });
-    console.error(error);
-    return res.status(500).json({ message: error.message || 'Server error' });
+    console.error('[rejectVendor]', error?.message || error, error?.stack);
+    const msg = error?.message && !/next is not a function/i.test(error.message)
+      ? error.message
+      : 'Vendor reject failed. Check server logs (Vercel → your project → Logs).';
+    return res.status(500).json({ message: msg });
   }
 };
 

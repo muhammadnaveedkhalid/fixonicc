@@ -156,10 +156,22 @@ app.get('/', (req, res) => {
   res.send('Backend is running successfully...');
 });
 
-// Global error handler (for asyncHandler and other next(err) calls)
+// Global error handler – never send raw "next is not a function" to client; log real error for debugging
 app.use((err, req, res, next) => {
-  console.error('Error:', err.message || err);
-  res.status(err.status || 500).json({ message: err.message || 'Server error' });
+  const status = err.status || 500;
+  const rawMessage = err.message || String(err);
+  const isNextError = /next is not a function/i.test(rawMessage);
+
+  // Log full error and stack so you can fix from Vercel/server logs
+  console.error('[Server Error]', rawMessage);
+  if (err.stack) console.error(err.stack);
+
+  // Send a proper message to the client so you know what to do
+  const clientMessage = isNextError
+    ? 'Vendor action failed: server middleware issue. Redeploy the backend (latest code) and do a hard refresh (Ctrl+Shift+R) on the dashboard.'
+    : (rawMessage || 'Server error');
+
+  res.status(status).json({ message: clientMessage });
 });
 
 const PORT = process.env.PORT || 5000;

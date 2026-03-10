@@ -296,7 +296,12 @@ export const DataProvider = ({ children }) => {
         setUsers((prev) => prev.map((u) => (u._id === data._id ? { ...u, ...data } : u)));
         return { success: true };
       }
-      return { success: false, message: data.message || `Approve failed (${response.status})` };
+      const serverMsg = data.message || `Approve failed (${response.status})`;
+      if (/next is not a function/i.test(serverMsg)) {
+        console.error('Approve API returned:', serverMsg);
+        return { success: false, message: 'Could not approve vendor. Redeploy the backend and hard refresh (Ctrl+Shift+R), then try again.' };
+      }
+      return { success: false, message: serverMsg };
     } catch (error) {
       console.error('Error approving vendor:', error);
       return { success: false, message: error.message || 'Network error' };
@@ -320,7 +325,12 @@ export const DataProvider = ({ children }) => {
         setUsers((prev) => prev.map((u) => (u._id === data._id ? { ...u, ...data } : u)));
         return { success: true };
       }
-      return { success: false, message: data.message || `Reject failed (${response.status})` };
+      const serverMsg = data.message || `Reject failed (${response.status})`;
+      if (/next is not a function/i.test(serverMsg)) {
+        console.error('Reject API returned:', serverMsg);
+        return { success: false, message: 'Could not reject vendor. Redeploy the backend and hard refresh (Ctrl+Shift+R), then try again.' };
+      }
+      return { success: false, message: serverMsg };
     } catch (error) {
       console.error('Error rejecting vendor:', error);
       return { success: false, message: error.message || 'Network error' };
