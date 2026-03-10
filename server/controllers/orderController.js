@@ -1,5 +1,6 @@
 import asyncHandler from 'express-async-handler';
 import Order from '../models/Order.js';
+import { sendOrderPlacedEmail } from '../utils/notificationService.js';
 
 // @desc    Create new order
 // @route   POST /api/orders
@@ -43,6 +44,18 @@ const addOrderItems = asyncHandler(async (req, res) => {
     });
 
     const createdOrder = await order.save();
+
+    // Send order confirmation email to customer when order is placed (and paid)
+    if (createdOrder.isPaid && req.user?.email) {
+      try {
+        await sendOrderPlacedEmail(
+          { name: req.user.name, email: req.user.email },
+          createdOrder
+        );
+      } catch (err) {
+        console.error('Order confirmation email error:', err?.message || err);
+      }
+    }
 
     res.status(201).json(createdOrder);
   }
