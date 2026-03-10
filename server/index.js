@@ -74,18 +74,27 @@ io.on("connection", (socket) => {
 
 app.use((req, res, next) => {
   req.io = io;
-  next();
+  if (typeof next === 'function') next();
+  else res.status(500).json({ message: 'Server error' });
 });
 
 // Manual CORS middleware (kept from previous version style)
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  if (!origin) return next();
+  if (!origin) {
+    if (typeof next === 'function') next();
+    else res.status(500).json({ message: 'Server error' });
+    return;
+  }
 
   const isAllowed =
     allowedOrigins.includes(origin) || process.env.NODE_ENV !== "production";
 
-  if (!isAllowed) return next();
+  if (!isAllowed) {
+    if (typeof next === 'function') next();
+    else res.status(500).json({ message: 'Server error' });
+    return;
+  }
 
   res.setHeader("Vary", "Origin");
   res.setHeader("Access-Control-Allow-Origin", origin);
@@ -103,7 +112,8 @@ app.use((req, res, next) => {
     return res.sendStatus(204);
   }
 
-  next();
+  if (typeof next === 'function') next();
+  else res.status(500).json({ message: 'Server error' });
 });
 
 app.use(express.json());
@@ -112,7 +122,8 @@ app.use(express.json());
 app.use('/api/', async (req, res, next) => {
   try {
     await ensureDb();
-    next();
+    if (typeof next === 'function') next();
+    else res.status(500).json({ message: 'Server error' });
   } catch (err) {
     console.error('DB not ready:', err?.message || err);
     res.status(503).json({ message: 'Service temporarily unavailable. Please try again.' });

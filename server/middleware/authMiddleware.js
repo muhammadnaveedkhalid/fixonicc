@@ -18,7 +18,8 @@ export const protect = async (req, res, next) => {
     if (!req.user) {
       return res.status(401).json({ message: 'Not authorized, token failed' });
     }
-    return next();
+    if (typeof next === 'function') return next();
+    return res.status(500).json({ message: 'Server error' });
   } catch (error) {
     console.error(error);
     return res.status(401).json({ message: 'Not authorized, token failed' });
@@ -27,7 +28,8 @@ export const protect = async (req, res, next) => {
 
 export const admin = (req, res, next) => {
   if (req.user && req.user.role === 'admin') {
-    return next();
+    if (typeof next === 'function') return next();
+    return res.status(500).json({ message: 'Server error' });
   }
   return res.status(401).json({ message: 'Not authorized as an admin' });
 };

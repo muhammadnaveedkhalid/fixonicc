@@ -25,7 +25,7 @@ router.post('/reset-password', resetPassword);
 
 router.get('/profile/:id', getUserProfile);
 
-router.route('/users').get(protect, getUsers);
+router.route('/users').get(protect, runAsync(getUsers));
 router.route('/users/:id').put(protect, admin, runAsync(updateUser));
 router.route('/users/:id').delete(protect, admin, runAsync(deleteUser));
 
