@@ -165,7 +165,8 @@ export const verifyEmailLink = async (req, res) => {
             token: generateToken(user._id),
         });
     } catch (error) {
-        return res.status(500).json({ message: error.message || 'Server error' });
+        console.error('verifyEmailLink error:', error.message || error);
+        return res.status(500).json({ message: 'Server error while verifying email. Please try again.' });
     }
 };
 

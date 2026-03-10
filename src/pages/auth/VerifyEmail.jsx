@@ -49,11 +49,11 @@ const VerifyEmail = () => {
           setTimeout(() => navigate("/signin", { replace: true }), 2000);
         } else {
           setStatus("error");
-          setMessage(data.message || "Invalid or expired link.");
+          setMessage("Verification link is invalid or has expired. Please request a new one.");
         }
       } catch (err) {
         setStatus("error");
-        setMessage("Something went wrong. Please try again.");
+        setMessage("Unable to contact server. Please try again in a moment.");
       }
     };
 
